@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SpeedTestService } from './speed-test.service';
 import setTimeout = jest.setTimeout;
+import { UtilsService } from '@app/utils';
 
 describe('SpeedTestService', () => {
   let service: SpeedTestService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SpeedTestService],
+      providers: [SpeedTestService, UtilsService],
     }).compile();
 
     service = module.get<SpeedTestService>(SpeedTestService);
@@ -15,10 +16,6 @@ describe('SpeedTestService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('should ensure binary', () => {
-    expect(service.ensureBinary()).toBeDefined();
   });
 
   it('should exec', async () => {

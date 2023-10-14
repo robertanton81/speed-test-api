@@ -1,80 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import * as path from 'path';
-import * as childProcess from 'child_process';
-import { chMod } from './utils/chmod.util';
-import { fromEvent } from 'rxjs';
+import { filter, from, fromEvent, mergeMap, share, switchMap } from 'rxjs';
 import * as stringDecoder from 'string_decoder';
+import { ensureBinary } from './utils/ensureBinary.util';
+import { UtilsService } from '@app/utils';
+import { startSpeedTest } from './utils/startSpeedTest.util';
 
 @Injectable()
 export class SpeedTestService {
-  async ensureBinary() {
-    const platformBinaries = {
-      darwin: 'ookla-speedtest-1.2.0-macosx-universal/speedtest',
-      win32: 'ookla-speedtest-1.2.0-win64/speedtest.exe',
-      linux: 'ookla-speedtest-1.2.0-linux-x86_64/speedtest',
-    };
-
-    const platform = process.platform;
-    const binFile = platformBinaries[platform];
-
-    if (!binFile) {
-      throw new Error(`Unsupported platform: ${platform}`);
-    }
-
-    const binFilePath = path.join(__dirname, 'binaries', binFile);
-    await chMod(binFilePath, 0o755);
-
-    return binFilePath;
-  }
+  constructor(private readonly utilsService: UtilsService) {}
 
   async executeSpeedTest() {
     try {
-      const binary = await this.ensureBinary();
-      const args = ['-p', '--accept-license', '--accept-gdpr', '--format=json'];
+      const cliProcess = await this.utilsService.pipe(
+        null,
+        ensureBinary,
+        startSpeedTest,
+      );
+
+      if (cliProcess instanceof Error) return cliProcess;
 
       const decoder = new stringDecoder.StringDecoder('utf8');
 
-      const cliProcess = childProcess.spawn(binary, args);
+      const $obsStdout = fromEvent(cliProcess.stdout, 'data');
 
-      cliProcess.stdout.on('data', (data) => {
-        try {
+      const $obsError = fromEvent(cliProcess.stderr, 'data');
+      const $obsClose = fromEvent(cliProcess, 'close');
+      const $obsExit = fromEvent(cliProcess, 'exit');
+
+      const $obsFormatOutput = $obsStdout.pipe(
+        mergeMap((data: Buffer) => {
           const stringData = decoder.write(data);
           const lines = stringData?.trim().split('\n');
 
-          lines.forEach((line) => {
-            const json = JSON.parse(line);
-            console.log(json);
-          });
-          // const json = JSON.parse(stringData);
-          console.log(data);
-        } catch (e) {
-          console.error(e);
-        }
-      });
+          return from(lines.map((line) => JSON.parse(line)));
+        }),
+        share(),
+      );
 
-      const obsFrom = fromEvent(cliProcess.stdout, 'data');
-      const obsError = fromEvent(cliProcess.stderr, 'data');
-      const obsClose = fromEvent(cliProcess, 'close');
-      const obsExit = fromEvent(cliProcess, 'exit');
+      const $testStart = $obsFormatOutput
+        .pipe(filter((x) => x.type === 'testStart'))
+        .subscribe((data) => {
+          console.debug('testStart', data);
+        });
 
-      obsClose.subscribe((data) => {
-        console.log('close', data);
-      });
+      const $ping = $obsFormatOutput
+        .pipe(filter((x) => x.type === 'ping'))
+        .subscribe((data) => {
+          console.debug('ping', data);
+        });
 
-      obsExit.subscribe((data) => {
-        console.log('exit', data);
-      });
+      const $download = $obsFormatOutput
+        .pipe(filter((x) => x.type === 'download'))
+        .subscribe((data) => {
+          console.debug('download', data);
+        });
 
-      // obsFrom.subscribe((data: Buffer) => {
-      //   try {
-      //     const stringData = decoder.write(data);
-      //     const lines = stringData?.trim().split('\n');
-      //
-      //     console.log(stringData);
-      //   } catch (e) {
-      //     console.error(e);
-      //   }
-      // });
+      const $upload = $obsFormatOutput
+        .pipe(filter((x) => x.type === 'upload'))
+        .subscribe((data) => {
+          console.debug('upload', data);
+        });
+
+      const $testEnd = $obsFormatOutput.pipe(
+        filter((data) => data.type === 'result'),
+        switchMap((result) => result.url),
+      );
     } catch (e) {
       console.error(e);
     }
