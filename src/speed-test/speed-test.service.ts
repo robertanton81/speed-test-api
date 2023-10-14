@@ -4,6 +4,7 @@ import * as stringDecoder from 'string_decoder';
 import { ensureBinary } from './utils/ensureBinary.util';
 import { UtilsService } from '@app/utils';
 import { startSpeedTest } from './utils/startSpeedTest.util';
+import * as path from 'path';
 
 @Injectable()
 export class SpeedTestService {
@@ -12,12 +13,10 @@ export class SpeedTestService {
   async executeSpeedTest() {
     try {
       const cliProcess = await this.utilsService.pipe(
-        null,
+        path.join(__dirname, 'binaries'),
         ensureBinary,
         startSpeedTest,
       );
-
-      if (cliProcess instanceof Error) return cliProcess;
 
       const decoder = new stringDecoder.StringDecoder('utf8');
 

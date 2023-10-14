@@ -1,7 +1,9 @@
-import path from 'path';
+import * as path from 'path';
 import { chMod } from './chmod.util';
 
-export const ensureBinary: () => Promise<string | Error> = async () => {
+export const ensureBinary: (binariesPath: string) => Promise<string> = async (
+  binariesPath,
+) => {
   try {
     const platformBinaries = {
       darwin: 'ookla-speedtest-1.2.0-macosx-universal/speedtest',
@@ -16,13 +18,11 @@ export const ensureBinary: () => Promise<string | Error> = async () => {
       throw new Error(`Unsupported platform: ${platform}`);
     }
 
-    const binFilePath = path.join(__dirname, 'binaries', binFile);
+    const binFilePath = path.join(binariesPath, binFile);
     await chMod(binFilePath, 0o755);
 
     return binFilePath;
   } catch (error) {
-    return new Error(
-      `Error getting binary. Original message: ${error.message}`,
-    );
+    throw new Error(`Error getting binary. Original message: ${error.message}`);
   }
 };
