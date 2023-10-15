@@ -4,7 +4,13 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true
+    "webpack": false,
+    "assets": [
+      {
+        "include": "**/binaries/**/*",
+        "outDir": "dist/src/"
+      }
+    ]
   },
   "projects": {
     "utils": {

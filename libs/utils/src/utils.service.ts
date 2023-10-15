@@ -10,4 +10,14 @@ export class UtilsService {
   ): LastFnReturnType<F, ReturnType<FirstFn>> {
     return (fns as AnyFunc[]).reduce((acc, fn) => fn(acc), firstFn(arg));
   }
+
+  tryCatchSynchronous = <T>(fn: () => T, errorMessage?: string): T | Error => {
+    try {
+      return fn();
+    } catch (error) {
+      console.error(error);
+
+      return errorMessage ? new Error(errorMessage) : error;
+    }
+  };
 }

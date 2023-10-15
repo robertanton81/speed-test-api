@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SpeedTestService } from './speed-test.service';
+import { SpeedTestService } from '../speed-test.service';
 import setTimeout = jest.setTimeout;
 import { UtilsService } from '@app/utils';
 
@@ -19,7 +19,11 @@ describe('SpeedTestService', () => {
   });
 
   it('should exec', async () => {
-    await service.executeSpeedTest();
+    service
+      .executeSpeedTest({ upload: false, download: false })
+      .subscribe((data) => {
+        console.log(data);
+      });
     setTimeout(200000);
 
     expect(true).toBe(true);

@@ -1,71 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { filter, from, fromEvent, mergeMap, share, switchMap } from 'rxjs';
-import * as stringDecoder from 'string_decoder';
-import { ensureBinary } from './utils/ensureBinary.util';
 import { UtilsService } from '@app/utils';
-import { startSpeedTest } from './utils/startSpeedTest.util';
 import * as path from 'path';
+import { catchError, filter, map, Observable, of } from 'rxjs';
+import {
+  ensureBinary,
+  getFilteredEvents,
+  getFormattedStdoutObservable,
+  partialFromEvent,
+  startSpeedTest,
+} from './utils';
+import { IEvents, IExecuteTestArgs } from './types';
+import { mapEventTypes } from './utils/mapEventTypes.util';
+import { BaseEventDto } from './dto/events';
 
 @Injectable()
 export class SpeedTestService {
   constructor(private readonly utilsService: UtilsService) {}
 
-  async executeSpeedTest() {
+  executeSpeedTest(args: IExecuteTestArgs): Observable<Error | IEvents> {
     try {
-      const cliProcess = await this.utilsService.pipe(
+      const cliProcess = this.utilsService.pipe(
         path.join(__dirname, 'binaries'),
         ensureBinary,
         startSpeedTest,
       );
 
-      const decoder = new stringDecoder.StringDecoder('utf8');
+      if (cliProcess instanceof Error) return of(cliProcess);
 
-      const $obsStdout = fromEvent(cliProcess.stdout, 'data');
+      const $onStdOut: Observable<BaseEventDto[] | Error> =
+        this.utilsService.pipe(
+          cliProcess.stdout,
+          partialFromEvent('data'),
+          getFormattedStdoutObservable,
+        );
 
-      const $obsError = fromEvent(cliProcess.stderr, 'data');
-      const $obsClose = fromEvent(cliProcess, 'close');
-      const $obsExit = fromEvent(cliProcess, 'exit');
+      return $onStdOut.pipe(
+        map(getFilteredEvents(args)),
+        map(mapEventTypes),
+        filter(
+          (events) =>
+            (Array.isArray(events) && events.length > 0) ||
+            events instanceof Error,
+        ),
+        catchError((err) => {
+          console.log(err);
 
-      const $obsFormatOutput = $obsStdout.pipe(
-        mergeMap((data: Buffer) => {
-          const stringData = decoder.write(data);
-          const lines = stringData?.trim().split('\n');
-
-          return from(lines.map((line) => JSON.parse(line)));
+          return of(err);
         }),
-        share(),
-      );
-
-      const $testStart = $obsFormatOutput
-        .pipe(filter((x) => x.type === 'testStart'))
-        .subscribe((data) => {
-          console.debug('testStart', data);
-        });
-
-      const $ping = $obsFormatOutput
-        .pipe(filter((x) => x.type === 'ping'))
-        .subscribe((data) => {
-          console.debug('ping', data);
-        });
-
-      const $download = $obsFormatOutput
-        .pipe(filter((x) => x.type === 'download'))
-        .subscribe((data) => {
-          console.debug('download', data);
-        });
-
-      const $upload = $obsFormatOutput
-        .pipe(filter((x) => x.type === 'upload'))
-        .subscribe((data) => {
-          console.debug('upload', data);
-        });
-
-      const $testEnd = $obsFormatOutput.pipe(
-        filter((data) => data.type === 'result'),
-        switchMap((result) => result.url),
       );
     } catch (e) {
-      console.error(e);
+      console.log(e);
+
+      return of(e);
     }
   }
 }

@@ -1,4 +1,4 @@
-export class ResultInterfaceDto {
+export interface IEventInterface {
   internalIp: string;
   name: string;
   macAddr: string;

@@ -1,4 +1,4 @@
-export class ResultServerDto {
+export interface IEventServer {
   id: string;
   host: string;
   port: number;

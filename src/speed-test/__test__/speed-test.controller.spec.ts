@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SpeedTestController } from './speed-test.controller';
-import { SpeedTestService } from './speed-test.service';
+import { SpeedTestController } from '../speed-test.controller';
+import { SpeedTestService } from '../speed-test.service';
+import { UtilsService } from '@app/utils';
 
 describe('SpeedTestController', () => {
   let controller: SpeedTestController;
@@ -8,7 +9,7 @@ describe('SpeedTestController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SpeedTestController],
-      providers: [SpeedTestService],
+      providers: [SpeedTestService, UtilsService],
     }).compile();
 
     controller = module.get<SpeedTestController>(SpeedTestController);

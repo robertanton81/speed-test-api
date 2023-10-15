@@ -1,14 +1,17 @@
 import * as childProcess from 'child_process';
 
-export const startSpeedTest = async (binary: Promise<string>) => {
+export const startSpeedTest = (
+  binary: string | Error,
+): childProcess.ChildProcessWithoutNullStreams | Error => {
   try {
-    const args = ['-p', '--accept-license', '--accept-gdpr', '--format=json'];
-    return childProcess.spawn(await binary, args);
-  } catch (e) {
-    console.error(e);
+    if (binary instanceof Error) return binary;
 
-    throw new Error(
-      `Error starting speed test. Original message: ${e.message}`,
+    const args = ['-p', '--accept-license', '--accept-gdpr', '--format=json'];
+
+    return childProcess.spawn(binary, args);
+  } catch (error) {
+    return new Error(
+      `Error starting speed test. Original message: ${error.message}`,
     );
   }
 };

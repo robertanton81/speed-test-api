@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { chMod } from './chmod.util';
 
-export const ensureBinary: (binariesPath: string) => Promise<string> = async (
+export const ensureBinary: (binariesPath: string) => string | Error = (
   binariesPath,
 ) => {
   try {
@@ -15,11 +15,11 @@ export const ensureBinary: (binariesPath: string) => Promise<string> = async (
     const binFile = platformBinaries[platform];
 
     if (!binFile) {
-      throw new Error(`Unsupported platform: ${platform}`);
+      return new Error(`Unsupported platform: ${platform}`);
     }
 
     const binFilePath = path.join(binariesPath, binFile);
-    await chMod(binFilePath, 0o755);
+    chMod(binFilePath, 0o755);
 
     return binFilePath;
   } catch (error) {

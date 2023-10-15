@@ -1,10 +1,10 @@
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 
-export const chMod = async (file, mode) => {
+export const chMod = (file, mode): void | Error => {
   try {
-    await fs.chmod(file, mode);
+    fs.chmodSync(file, mode);
   } catch (error) {
-    throw new Error(
+    return new Error(
       `Error changing permissions for "${file}". Original message: ${error.message}`,
     );
   }

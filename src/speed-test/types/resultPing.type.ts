@@ -1,4 +1,4 @@
-export class ResultPingDto {
+export interface IResultPing {
   jitter: number;
   latency: number;
   lower: number;

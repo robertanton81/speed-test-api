@@ -1,5 +1,4 @@
-export class PingDto {
-  timestamp: string;
+export interface IPing {
   jitter: number;
   latency: number;
   progress: number;
