@@ -19,11 +19,9 @@ describe('SpeedTestService', () => {
   });
 
   it('should exec', async () => {
-    service
-      .executeSpeedTest({ upload: false, download: false })
-      .subscribe((data) => {
-        console.log(data);
-      });
+    service.executeSpeedTest('ping').subscribe((data) => {
+      console.log(data);
+    });
     setTimeout(200000);
 
     expect(true).toBe(true);

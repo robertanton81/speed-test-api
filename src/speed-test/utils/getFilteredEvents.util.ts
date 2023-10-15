@@ -1,24 +1,20 @@
-import { IExecuteTestArgs } from '../types';
+import { ITestType } from '../types';
 import { BaseEventDto } from '../dto/events';
 
 export const getFilteredEvents =
-  (args: IExecuteTestArgs) => (events: BaseEventDto[] | Error) => {
+  (testType: ITestType) => (events: BaseEventDto[] | Error) => {
     if (events instanceof Error) return events;
 
     return events.filter((event) => {
+      if (testType === 'full') return true;
+
       switch (event.type) {
-        case 'download':
-          return args.download;
-        case 'upload':
-          return args.upload;
         case 'testStart':
-          return true;
-        case 'ping':
           return true;
         case 'result':
           return true;
         default:
-          return false;
+          return testType === event.type;
       }
     });
   };

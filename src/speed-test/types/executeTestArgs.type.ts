@@ -1,5 +1,1 @@
-export interface IExecuteTestArgs {
-  download?: boolean;
-  upload?: boolean;
-  // detail?: boolean;
-}
+export type ITestType = 'download' | 'upload' | 'ping' | 'full';

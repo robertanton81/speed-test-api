@@ -9,15 +9,15 @@ import {
   partialFromEvent,
   startSpeedTest,
 } from './utils';
-import { IEvents, IExecuteTestArgs } from './types';
-import { mapEventTypes } from './utils/mapEventTypes.util';
+import { IEvents, ITestType } from './types';
+import { mapEventResultTypes } from './utils/mapEventResultTypes.util';
 import { BaseEventDto } from './dto/events';
 
 @Injectable()
 export class SpeedTestService {
   constructor(private readonly utilsService: UtilsService) {}
 
-  executeSpeedTest(args: IExecuteTestArgs): Observable<Error | IEvents> {
+  executeSpeedTest(args: ITestType): Observable<Error | IEvents[]> {
     try {
       const cliProcess = this.utilsService.pipe(
         path.join(__dirname, 'binaries'),
@@ -36,7 +36,7 @@ export class SpeedTestService {
 
       return $onStdOut.pipe(
         map(getFilteredEvents(args)),
-        map(mapEventTypes),
+        map(mapEventResultTypes(args)),
         filter(
           (events) =>
             (Array.isArray(events) && events.length > 0) ||

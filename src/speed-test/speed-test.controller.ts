@@ -7,15 +7,37 @@ export class SpeedTestController {
   constructor(private readonly speedTestService: SpeedTestService) {}
 
   @Sse('latency-test')
-  executeSpeedTest(): Observable<MessageEvent> {
-    return from(
-      this.speedTestService.executeSpeedTest({
-        download: false,
-        upload: false,
+  executeLatencyTest(): Observable<MessageEvent> {
+    return from(this.speedTestService.executeSpeedTest('ping')).pipe(
+      map((events) => {
+        return { data: events } as MessageEvent;
       }),
-    ).pipe(
-      map((event) => {
-        return { data: event } as MessageEvent;
+    );
+  }
+
+  @Sse('download-test')
+  executeDownloadTest(): Observable<MessageEvent> {
+    return from(this.speedTestService.executeSpeedTest('download')).pipe(
+      map((events) => {
+        return { data: events } as MessageEvent;
+      }),
+    );
+  }
+
+  @Sse('upload-test')
+  executeUploadTest(): Observable<MessageEvent> {
+    return from(this.speedTestService.executeSpeedTest('upload')).pipe(
+      map((events) => {
+        return { data: events } as MessageEvent;
+      }),
+    );
+  }
+
+  @Sse('full-test')
+  executeFullTest(): Observable<MessageEvent> {
+    return from(this.speedTestService.executeSpeedTest('full')).pipe(
+      map((events) => {
+        return { data: events } as MessageEvent;
       }),
     );
   }
