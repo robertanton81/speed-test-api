@@ -1,5 +1,5 @@
 import { ITestType } from '../types';
-import { BaseEventDto } from '../dto/events';
+import { BaseEventDto } from '../dtos/events';
 
 export const getFilteredEvents =
   (testType: ITestType) => (events: BaseEventDto[] | Error) => {

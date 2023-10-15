@@ -1,6 +1,6 @@
 import { Observable, share, catchError, of, map } from 'rxjs';
 import * as stringDecoder from 'string_decoder';
-import { BaseEventDto } from '../dto/events';
+import { BaseEventDto } from '../dtos/events';
 
 export const getFormattedStdoutObservable = (
   stdOutObs: Observable<Buffer>,

@@ -4,12 +4,12 @@ import {
   PingEventDto,
   StartEventDto,
   UploadEventDto,
-} from '../dto/events';
+} from '../dtos/events';
 import {
   DownloadTestResultDto,
   LatencyTestResultDto,
   UploadTestResultDto,
-} from '../dto/results';
+} from '../dtos/results';
 
 export type IEvents =
   | DownloadEventDto

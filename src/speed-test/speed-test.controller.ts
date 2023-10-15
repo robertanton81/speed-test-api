@@ -1,6 +1,8 @@
 import { Controller, Sse } from '@nestjs/common';
 import { SpeedTestService } from './speed-test.service';
 import { from, map, Observable } from 'rxjs';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from './enums/roles.enum';
 
 @Controller()
 export class SpeedTestController {
@@ -34,6 +36,9 @@ export class SpeedTestController {
   }
 
   @Sse('full-test')
+  // it will throw 403 every time, because login and authentication is not implemented
+  // to test, just comment out the @Roles decorator
+  @Roles(Role.Private)
   executeFullTest(): Observable<MessageEvent> {
     return from(this.speedTestService.executeSpeedTest('full')).pipe(
       map((events) => {

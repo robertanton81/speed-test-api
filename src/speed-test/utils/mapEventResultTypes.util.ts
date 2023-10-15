@@ -1,10 +1,10 @@
-import { BaseEventDto, ResultEventDto } from '../dto/events';
+import { BaseEventDto, ResultEventDto } from '../dtos/events';
 import { IEvents, ITestType } from '../types';
 import {
   DownloadTestResultDto,
   LatencyTestResultDto,
   UploadTestResultDto,
-} from '../dto/results';
+} from '../dtos/results';
 
 export const mapEventResultTypes =
   (testType: ITestType) =>

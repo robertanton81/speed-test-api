@@ -11,7 +11,7 @@ import {
 } from './utils';
 import { IEvents, ITestType } from './types';
 import { mapEventResultTypes } from './utils/mapEventResultTypes.util';
-import { BaseEventDto } from './dto/events';
+import { BaseEventDto } from './dtos/events';
 
 @Injectable()
 export class SpeedTestService {
@@ -26,6 +26,10 @@ export class SpeedTestService {
       );
 
       if (cliProcess instanceof Error) return of(cliProcess);
+
+      cliProcess.on('error', (err) => {
+        cliProcess.kill(1);
+      });
 
       const $onStdOut: Observable<BaseEventDto[] | Error> =
         this.utilsService.pipe(
