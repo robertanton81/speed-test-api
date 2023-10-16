@@ -6,8 +6,11 @@ import {
   debounce,
   filter,
   finalize,
+  first,
+  from,
   fromEvent,
   map,
+  mergeMap,
   Observable,
   of,
   switchMap,
@@ -26,6 +29,7 @@ import {
 import { IEvents, ITestType } from './types';
 import { mapEventResultTypes } from './utils/mapEventResultTypes.util';
 import { BaseEventDto } from './dtos/events';
+import * as stringDecoder from 'string_decoder';
 
 @Injectable()
 export class SpeedTestService {
@@ -37,7 +41,7 @@ export class SpeedTestService {
       const cliProcess = this.utilsService.pipe(
         path.join(__dirname, 'binaries'),
         ensureBinary,
-        startSpeedTest,
+        startSpeedTest(),
       );
 
       if (cliProcess instanceof Error) return of(cliProcess);
@@ -86,6 +90,71 @@ export class SpeedTestService {
       return flattened$.pipe(
         takeUntil(cancel$),
         takeUntil(onStderr$),
+        finalize(() => {
+          cliProcess.kill(1);
+
+          this.logger.log(`Stream completed`);
+        }),
+        catchError(catchObservableError('parsing events')),
+      );
+    } catch (error) {
+      const exception = new Error(`Error executing test: ${error.message}`);
+      this.logger.error(exception);
+
+      return of(exception);
+    }
+  }
+
+  getServerDetails(): Observable<Error | unknown> {
+    try {
+      const cliProcess = this.utilsService.pipe(
+        path.join(__dirname, 'binaries'),
+        ensureBinary,
+        startSpeedTest(true),
+      );
+
+      if (cliProcess instanceof Error) return of(cliProcess);
+
+      // TODO: test and refactor
+      const onStderr$ = fromEvent(cliProcess.stderr, 'error').pipe(
+        map((e) => {
+          this.logger.error(e);
+
+          return e;
+        }),
+        debounce(() => timer(1000)),
+      );
+
+      cliProcess.on('exit', (code) => {
+        this.logger.log(`Child process exited with code ${code}`);
+      });
+
+      cliProcess.on('close', (code) => {
+        this.logger.log(`Child process closed with code ${code}`);
+      });
+
+      const stdOutEvent$ = this.utilsService.pipe(
+        cliProcess.stdout,
+        partialFromEvent('data'),
+      );
+
+      if (stdOutEvent$ instanceof Error) return of(stdOutEvent$);
+
+      const decoder = new stringDecoder.StringDecoder('utf8');
+      const onStdout$ = stdOutEvent$.pipe(
+        switchMap(
+          (data: Buffer) =>
+            decoder
+              .write(data)
+              ?.trim()
+              .split('\n')
+              ?.map((line) => JSON.parse(line)),
+        ),
+      );
+
+      return onStdout$.pipe(
+        takeUntil(onStderr$),
+        first(),
         finalize(() => {
           cliProcess.kill(1);
 

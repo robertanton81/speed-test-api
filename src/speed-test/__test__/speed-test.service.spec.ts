@@ -27,12 +27,17 @@ describe('SpeedTestService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should exec', async () => {
+  it('should exec test', async () => {
     service.executeSpeedTest('ping').subscribe((data) => {
-      console.log(data);
+      expect(data).toBeDefined();
     });
     setTimeout(200000);
+  });
 
-    expect(true).toBe(true);
+  it('should get server detail', async () => {
+    service.getServerDetails().subscribe((data) => {
+      expect(data).toBeDefined();
+    });
+    setTimeout(200000);
   });
 });

@@ -1,26 +1,30 @@
 import * as childProcess from 'child_process';
 import { Logger } from '@nestjs/common';
 
-export const startSpeedTest = (
-  binary: string | Error,
-): childProcess.ChildProcessWithoutNullStreams | Error => {
-  const logger = new Logger('fn() startSpeedTest');
-  try {
-    logger.log('Triggering speed test');
-    if (binary instanceof Error) return binary;
+export const startSpeedTest =
+  (serverDetails?: boolean) =>
+  (
+    binary: string | Error,
+  ): childProcess.ChildProcessWithoutNullStreams | Error => {
+    const logger = new Logger('fn() startSpeedTest');
+    try {
+      logger.log('Triggering speed test');
+      if (binary instanceof Error) return binary;
 
-    const args = ['-p', '--accept-license', '--accept-gdpr', '--format=json'];
+      const args = ['-p', '--accept-license', '--accept-gdpr', '--format=json'];
 
-    const process = childProcess.spawn(binary, args);
-    logger.log('Successfully triggered speed test');
+      serverDetails && args.push('--selection-details');
 
-    return process;
-  } catch (error) {
-    const exception = new Error(
-      `Error starting speed test. Original message: ${error.message}`,
-    );
+      const process = childProcess.spawn(binary, args);
+      logger.log('Successfully triggered speed test');
 
-    logger.error(exception);
-    return exception;
-  }
-};
+      return process;
+    } catch (error) {
+      const exception = new Error(
+        `Error starting speed test. Original message: ${error.message}`,
+      );
+
+      logger.error(exception);
+      return exception;
+    }
+  };
