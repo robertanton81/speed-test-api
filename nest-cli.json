@@ -10,6 +10,15 @@
         "include": "**/binaries/**/*",
         "outDir": "dist/src/"
       }
+    ],
+    "plugins": [
+      {
+        "name": "@nestjs/swagger",
+        "options": {
+          "dtoFileNameSuffix": ".dto",
+          "introspectComments": true
+        }
+      }
     ]
   },
   "projects": {

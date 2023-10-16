@@ -5,6 +5,8 @@ import { Roles } from './decorators/roles.decorator';
 import { Role } from './enums/roles.enum';
 import { IEvents } from './types';
 import { Response } from 'express';
+import { ApiOkResponse, ApiResponse } from '@nestjs/swagger';
+import { LatencyTestResultDto } from './dtos/results';
 
 @Controller()
 export class SpeedTestController {
@@ -30,6 +32,10 @@ export class SpeedTestController {
     );
   }
 
+  @ApiOkResponse({
+    description: 'Download speed test',
+    type: LatencyTestResultDto,
+  })
   @Sse('download-test')
   executeDownloadTest(@Res() response: Response): Observable<MessageEvent> {
     const id = SpeedTestController.genStreamId();
