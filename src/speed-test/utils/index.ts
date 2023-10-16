@@ -4,3 +4,5 @@ export * from './getFormattedStdOutObservable.util';
 export * from './ensureBinary.util';
 export * from './startSpeedTest.util';
 export * from './getFilteredEvents.util';
+export * from './catchObservableError.util';
+export * from './flattenEventValues.util';

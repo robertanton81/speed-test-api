@@ -1,11 +1,18 @@
 import * as fs from 'fs';
+import { Logger } from '@nestjs/common';
 
 export const chMod = (file, mode): void | Error => {
+  const logger = new Logger('fn() chMod');
   try {
+    logger.log(`Changing permissions for cli binary to "${mode}"`);
     fs.chmodSync(file, mode);
+    logger.log(`Successfully changed permissions for cli binary to "${mode}"`);
   } catch (error) {
-    return new Error(
-      `Error changing permissions for "${file}". Original message: ${error.message}`,
+    const exception = new Error(
+      `Error changing permissions for binary. Original message: ${error.message}`,
     );
+    logger.error(exception);
+
+    return exception;
   }
 };
